@@ -21,17 +21,17 @@ class WebSecurityConfig: WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(http: HttpSecurity?) {
-        http!!.antMatcher("/**")
-                .authorizeRequests()
-                .antMatchers("/").permitAll().also {
-                    //it.antMatchers("/internal/").authenticated()
-                    //        .and()
-                    //        .oauth2Login().and().logout()
-                    it.anyRequest().authenticated().and()
-                            .formLogin()
-                            .loginPage("/login")
-                            .permitAll()
-                }
-
+        http!!.authorizeRequests()
+                .antMatchers("/")
+                    .permitAll()
+                .anyRequest()
+                    .authenticated()
+                    .and()
+                    .oauth2Login {
+                        it.loginPage("/login").permitAll()
+                    }
+                    .formLogin {
+                        it.loginPage("/login").permitAll()
+                    }
     }
 }
