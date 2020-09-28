@@ -7,12 +7,25 @@ import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.AbstractRequestMatcherRegistry
+import org.springframework.security.config.annotation.web.HttpSecurityBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 
+/**
+ * Extension method to ExpressionUrlAuthorizationConfigurer, to enable IpAddress restriction from
+ * a collection of strings representing IP addresses.
+ */
+fun <T : HttpSecurityBuilder<T>?> ExpressionUrlAuthorizationConfigurer<T>.AuthorizedUrl.hasIpAddress(collection: Collection<String>): ExpressionUrlAuthorizationConfigurer<T>.ExpressionInterceptUrlRegistry {
+    return access(
+            collection.joinToString(separator = " or ") {
+                "hasIpAddress('$it')"
+            }
+    )
+}
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -28,19 +41,11 @@ class WebSecurityConfig: WebSecurityConfigurerAdapter() {
     )
 
     override fun configure(http: HttpSecurity?) {
-        val ipAddressWhiteListString: String =
-                whiteListedIps.joinToString(separator = " or ") {
-                    "hasIpAddress('$it')"
-                }
-
-        LogFactory.getLog(javaClass).warn(
-                ipAddressWhiteListString
-        )
-
         http!!.authorizeRequests()
                 .antMatchers("/")
                     .permitAll()
-                .antMatchers("/api/**").access(ipAddressWhiteListString)
+                .antMatchers("/api/**")
+                    .hasIpAddress(whiteListedIps)
                 .anyRequest()
                     .authenticated()
                 .and()
