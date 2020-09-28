@@ -1,12 +1,9 @@
 package com.r3.demo.config
 
-import com.r3.demo.service.MyUserDetailsService
 import org.apache.juli.logging.LogFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
-import org.springframework.security.config.annotation.web.AbstractRequestMatcherRegistry
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -35,17 +32,17 @@ class WebSecurityConfig: WebSecurityConfigurerAdapter() {
         return BCryptPasswordEncoder()
     }
 
-    private val whiteListedIps: Set<String> = setOf(
-            "127.0.0.1",
-            "255.1.1.1"
-    )
+    @Autowired
+    private lateinit var ipConfig: IpConfig
 
     override fun configure(http: HttpSecurity?) {
+        LogFactory.getLog(javaClass).warn(ipConfig.whitelist)
+
         http!!.authorizeRequests()
                 .antMatchers("/")
                     .permitAll()
                 .antMatchers("/api/**")
-                    .hasIpAddress(whiteListedIps)
+                    .hasIpAddress(ipConfig.whitelist)
                 .anyRequest()
                     .authenticated()
                 .and()
