@@ -6,7 +6,7 @@ import org.springframework.context.annotation.PropertySource
 
 @Configuration
 @ConfigurationProperties(prefix = "ip")
-@PropertySource(value = ["classpath:/config.properties"])
+@PropertySource(value = ["file:C:\\spring-app\\config.properties"])
 class IpConfig {
     lateinit var whitelist: Set<String>
 }
